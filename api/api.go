@@ -276,6 +276,9 @@ func (a *API) buildHandler() {
 	m.Handle("/get-coinbase-arbitrary", jsonHandler(a.getCoinbaseArbitrary))
 	m.Handle("/set-coinbase-arbitrary", jsonHandler(a.setCoinbaseArbitrary))
 
+	m.Handle("/get-block-template", jsonHandler(a.getBlockTemplate))
+	m.Handle("/submit-block", jsonHandler(a.submitBlock))
+
 	m.Handle("/verify-message", jsonHandler(a.verifyMessage))
 	m.Handle("/decode-program", jsonHandler(a.decodeProgram))
 	m.Handle("/compile", jsonHandler(a.compileEquity))

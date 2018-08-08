@@ -9,6 +9,10 @@ import (
 	"github.com/bytom/protocol/bc/types"
 )
 
+func (a *API) getBlockTemplate() Response {
+	return NewErrorResponse(errors.New("get-block-template not implemented yet."))
+}
+
 // BlockHeaderJSON struct provides support for get work in json format, when it also follows
 // BlockHeader structure
 type BlockHeaderJSON struct {
@@ -179,4 +183,8 @@ func (a *API) stopMining() Response {
 		return NewErrorResponse(errors.New("Failed to stop mining"))
 	}
 	return NewSuccessResponse("")
+}
+
+func (a *API) submitBlock() Response {
+	return NewErrorResponse(errors.New("submit-block not implemented yet."))
 }
