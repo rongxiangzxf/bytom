@@ -75,6 +75,11 @@ func TestCompile(t *testing.T) {
 			equitytest.OneTwo,
 			`[{"name":"Two","params":[{"name":"b","type":"Program"},{"name":"c","type":"Program"},{"name":"expirationHeight","type":"Integer"}],"clauses":[{"name":"redeem","blockheight":["expirationHeight"],"values":[{"name":"value","program":"b"}]},{"name":"default","blockheight":["expirationHeight"],"values":[{"name":"value","program":"c"}]}],"value":"value","body_bytecode":"537a64170000007bcda06900c3c251547ac163220000007bcd9f6900c3c251557ac1","body_opcodes":"3 ROLL JUMPIF:$default $redeem ROT BLOCKHEIGHT GREATERTHAN VERIFY 0 AMOUNT ASSET 1 4 ROLL CHECKOUTPUT JUMP:$_end $default ROT BLOCKHEIGHT LESSTHAN VERIFY 0 AMOUNT ASSET 1 5 ROLL CHECKOUTPUT $_end","recursive":false},{"name":"One","params":[{"name":"a","type":"Program"},{"name":"b","type":"Program"},{"name":"c","type":"Program"},{"name":"switchHeight","type":"Integer"},{"name":"blockHeight","type":"Integer"}],"clauses":[{"name":"redeem","blockheight":["switchHeight"],"values":[{"name":"value","program":"a"}]},{"name":"switch","blockheight":["switchHeight"],"values":[{"name":"value","program":"Two(b, c, blockHeight)"}],"contracts":["Two"]}],"value":"value","body_bytecode":"557a6418000000537acda06900c3c251547ac16358000000537acd9f6900c3c25100587a89577a89567a8901747e22537a64170000007bcda06900c3c251547ac163220000007bcd9f6900c3c251557ac189008901c07ec1","body_opcodes":"5 ROLL JUMPIF:$switch $redeem 3 ROLL BLOCKHEIGHT GREATERTHAN VERIFY 0 AMOUNT ASSET 1 4 ROLL CHECKOUTPUT JUMP:$_end $switch 3 ROLL BLOCKHEIGHT LESSTHAN VERIFY 0 AMOUNT ASSET 1 0 8 ROLL CATPUSHDATA 7 ROLL CATPUSHDATA 6 ROLL CATPUSHDATA 116 CAT 0x537a64170000007bcda06900c3c251547ac163220000007bcd9f6900c3c251557ac1 CATPUSHDATA 0 CATPUSHDATA 192 CAT CHECKOUTPUT $_end","recursive":false}]`,
 		},
+		{
+			"FailLock",
+			equitytest.FailLock,
+			`[{"name":"FailLock","clauses":[{"name":"FailData","params":[{"name":"arbitrary","type":"String"}],"values":[{"name":"locked","program":"final(arbitrary)"}]}],"value":"locked","body_bytecode":"00c3c251547a02616a7c7ec1","body_opcodes":"0 AMOUNT ASSET 1 4 ROLL 0x616a SWAP CAT CHECKOUTPUT","recursive":false,"Inheritance":null}]`,
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

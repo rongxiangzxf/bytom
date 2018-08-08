@@ -153,3 +153,11 @@ contract One(a, b, c: Program, switchHeight, blockHeight: Integer) locks value {
   }
 }
 `
+
+const FailLock = `
+contract FailLock() locks locked {
+  clause FailData(arbitrary: String) {
+    lock locked with final(arbitrary)
+  }
+}
+`

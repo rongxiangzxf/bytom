@@ -15,6 +15,7 @@ var builtins = []builtin{
 	{"min", "MIN", []typeDesc{intType, intType}, intType},
 	{"max", "MAX", []typeDesc{intType, intType}, intType},
 	{"checkTxSig", "TXSIGHASH SWAP CHECKSIG", []typeDesc{pubkeyType, sigType}, boolType},
+	{"final", "0x616a SWAP CAT", []typeDesc{nilType}, progType},
 	{"concat", "CAT", []typeDesc{nilType, nilType}, strType},
 	{"concatpush", "CATPUSHDATA", []typeDesc{nilType, nilType}, strType},
 	{"below", "BLOCKHEIGHT GREATERTHAN", []typeDesc{intType}, boolType},
