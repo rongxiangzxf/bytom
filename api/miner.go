@@ -9,7 +9,12 @@ import (
 	"github.com/bytom/protocol/bc/types"
 )
 
-func (a *API) getBlockTemplate() Response {
+type GbtReq struct {
+	Capabilities []string `json:"capabilities"`
+	Mode         string   `json:"mode"`
+}
+
+func (a *API) getBlockTemplate(in *GbtReq) Response {
 	return NewErrorResponse(errors.New("get-block-template not implemented yet."))
 }
 
@@ -22,7 +27,7 @@ type BlockHeaderJSON struct {
 	Timestamp         uint64                 `json:"timestamp"`           // The time of the block in seconds.
 	Nonce             uint64                 `json:"nonce"`               // Nonce used to generate the block.
 	Bits              uint64                 `json:"bits"`                // Difficulty target for the block.
-	BlockCommitment   *types.BlockCommitment `json:"block_commitment"`    //Block commitment
+	BlockCommitment   *types.BlockCommitment `json:"block_commitment"`    // Block commitment
 }
 
 type CoinbaseArbitrary struct {
