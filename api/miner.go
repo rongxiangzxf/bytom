@@ -10,12 +10,40 @@ import (
 )
 
 type GbtReq struct {
-	Capabilities []string `json:"capabilities"`
-	Mode         string   `json:"mode"`
+	Capabilities []string `json:"capabilities,omitempty"`
+	Mode         string   `json:"mode,omitempty"`
+
+	// Optional long polling.
+	LongPollID string `json:"longpollid,omitempty"`
+
+	// Optional template tweaking.  SigOpLimit and SizeLimit can be int64
+	// or bool.
+	SigOpLimit interface{} `json:"sigoplimit,omitempty"`
+	SizeLimit  interface{} `json:"sizelimit,omitempty"`
+	MaxVersion uint32      `json:"maxversion,omitempty"`
+
+	// Basic pool extension from BIP 0023.
+	Target string `json:"target,omitempty"`
+
+	// Block proposal from BIP 0023.  Data is only provided when Mode is
+	// "proposal".
+	Data   string `json:"data,omitempty"`
+	WorkID string `json:"workid,omitempty"`
 }
 
-func (a *API) getBlockTemplate(in *GbtReq) Response {
-	return NewErrorResponse(errors.New("get-block-template not implemented yet."))
+func (a *API) getBlockTemplate(ins *GbtReq) Response {
+	mode := "template" // Default mode: template
+	if ins.Mode != "" {
+		mode = ins.Mode
+	}
+
+	switch mode {
+	case "template":
+		return a.handleGbtRequest(ins)
+	case "proposal":
+		return a.handleGbtProposal(ins)
+	}
+	return NewErrorResponse(errors.New("Invalid mode."))
 }
 
 // BlockHeaderJSON struct provides support for get work in json format, when it also follows
@@ -192,4 +220,12 @@ func (a *API) stopMining() Response {
 
 func (a *API) submitBlock() Response {
 	return NewErrorResponse(errors.New("submit-block not implemented yet."))
+}
+
+func (a *API) handleGbtRequest(ins *GbtReq) Response {
+	return NewErrorResponse(errors.New("handleGbtRequest() not implemented yet."))
+}
+
+func (a *API) handleGbtProposal(ins *GbtReq) Response {
+	return NewErrorResponse(errors.New("handleGbtProposal() not implemented yet."))
 }
