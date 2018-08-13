@@ -223,7 +223,49 @@ func (a *API) submitBlock() Response {
 }
 
 func (a *API) handleGbtRequest(ins *GbtReq) Response {
-	return NewErrorResponse(errors.New("handleGbtRequest() not implemented yet."))
+	// Extract the relevant passed capabilities and restrict the result to
+	// either a coinbase value or a coinbase transaction object depending on
+	// the request.  Default to only providing a coinbase value.
+	useCoinbaseValue := true
+	var hasCoinbaseValue, hasCoinbaseTxn bool
+	for _, capability := range ins.Capabilities {
+		switch capability {
+		case "coinbasetxn":
+			hasCoinbaseTxn = true
+		case "coinbasevalue":
+			hasCoinbaseValue = true
+		}
+	}
+	if hasCoinbaseTxn && !hasCoinbaseValue {
+		useCoinbaseValue = false
+	}
+
+	// When a long poll ID was provided, this is a long poll request by the
+	// client to be notified when block template referenced by the ID should
+	// be replaced with a new one.
+	if ins.LongPollID != "" {
+		return NewErrorResponse(errors.New("long poll not supported yet."))
+	}
+
+	// Protect concurrent access when updating block templates.
+	/*
+		state := s.gbtWorkState
+		state.Lock()
+		defer state.Unlock()
+	*/
+
+	// Get and return a block template.  A new block template will be
+	// generated when the current best block has changed or the transactions
+	// in the memory pool have been updated and it has been at least five
+	// seconds since the last template was generated.  Otherwise, the
+	// timestamp for the existing block template is updated (and possibly
+	// the difficulty on testnet per the consesus rules).
+	/*
+		if err := state.updateBlockTemplate(s, useCoinbaseValue); err != nil {
+			return nil, err
+		}
+	*/
+	return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
 }
 
 func (a *API) handleGbtProposal(ins *GbtReq) Response {
