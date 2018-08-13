@@ -1,9 +1,11 @@
 package p2p
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -385,8 +387,13 @@ func (sw *Switch) ensureOutboundPeers() {
 
 	var wg sync.WaitGroup
 	nodes := make([]*discover.Node, numToDial)
-	n := sw.discv.ReadRandomNodes(nodes)
-	for i := 0; i < n; i++ {
+	sw.discv.ReadRandomNodes(nodes)
+	for _, seed := range strings.Split(sw.Config.P2P.Seeds, ",") {
+		url := "enode://" + hex.EncodeToString(crypto.Sha256([]byte(seed))) + "@" + seed
+		nodes = append(nodes, discover.MustParseNode(url))
+	}
+
+	for i := 0; i < len(nodes); i++ {
 		try := NewNetAddressIPPort(nodes[i].IP, nodes[i].TCP)
 		if sw.NodeInfo().ListenAddr == try.String() {
 			continue
