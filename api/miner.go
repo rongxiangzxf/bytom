@@ -239,7 +239,11 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	if hasCoinbaseTxn && !hasCoinbaseValue {
 		useCoinbaseValue = false
 	}
+	// TODO
+	if useCoinbaseValue {
+	}
 
+	// TODO
 	// When a long poll ID was provided, this is a long poll request by the
 	// client to be notified when block template referenced by the ID should
 	// be replaced with a new one.
@@ -247,6 +251,7 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 		return NewErrorResponse(errors.New("long poll not supported yet."))
 	}
 
+	// TODO
 	// Protect concurrent access when updating block templates.
 	/*
 		state := s.gbtWorkState
@@ -254,6 +259,7 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 		defer state.Unlock()
 	*/
 
+	// TODO
 	// Get and return a block template.  A new block template will be
 	// generated when the current best block has changed or the transactions
 	// in the memory pool have been updated and it has been at least five
@@ -265,9 +271,11 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 			return nil, err
 		}
 	*/
+
 	return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
 }
 
 func (a *API) handleGbtProposal(ins *GbtReq) Response {
+	// TODO
 	return NewErrorResponse(errors.New("handleGbtProposal() not implemented yet."))
 }

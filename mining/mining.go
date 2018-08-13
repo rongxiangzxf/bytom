@@ -66,6 +66,10 @@ func createCoinbaseTx(accountManager *account.Manager, amount uint64, blockHeigh
 	return tx, nil
 }
 
+// TODO
+type BlockTemplate struct {
+}
+
 // NewBlockTemplate returns a new block template that is ready to be solved
 func NewBlockTemplate(c *protocol.Chain, txPool *protocol.TxPool, accountManager *account.Manager) (b *types.Block, err error) {
 	view := state.NewUtxoViewpoint()
