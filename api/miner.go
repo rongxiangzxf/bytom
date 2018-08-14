@@ -246,6 +246,7 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	}
 	// TODO
 	if useCoinbaseValue {
+		// return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
 	}
 
 	// TODO
@@ -276,13 +277,12 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 			return nil, err
 		}
 	*/
-	template := a.miningPool.GetBlockTemplate()
 
-	if template != nil {
-		return NewSuccessResponse(template)
-	} else {
+	template := a.miningPool.GetBlockTemplate()
+	if template == nil {
 		return NewErrorResponse(errors.New("block template not ready yet."))
-		// return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
+	} else {
+		return NewSuccessResponse(template)
 	}
 }
 
