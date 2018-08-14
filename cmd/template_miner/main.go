@@ -79,7 +79,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	// log.Println(bt.BlockHeader)
-	log.Println(bt.BlockHeader.Timestamp)
+	// log.Println(bt.BlockHeader.Timestamp)
 
 	if doWork(bt.BlockHeader, bt.Seed) {
 		// log.Println("bh:", bt.BlockHeader)

@@ -5,7 +5,7 @@ import (
 
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
-	// "github.com/bytom/mining"
+	"github.com/bytom/mining"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 )
@@ -221,7 +221,7 @@ func (a *API) stopMining() Response {
 }
 
 // TODO
-func (a *API) submitBlock(b *types.Block) Response {
+func (a *API) submitBlock(b mining.BlockTemplate) Response {
 	a.miningPool.SubmitBlock(b)
 	return NewSuccessResponse("")
 	return NewErrorResponse(errors.New("submit-block not implemented yet."))

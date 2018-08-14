@@ -149,12 +149,22 @@ func (m *MiningPool) submitWork(bh *types.BlockHeader) error {
 	return nil
 }
 
-func (m *MiningPool) SubmitBlock(b *types.Block) error {
+func (m *MiningPool) SubmitBlock(bt mining.BlockTemplate) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
+	b := &types.Block{
+		BlockHeader:  *bt.BlockHeader,
+		Transactions: bt.Transactions,
+	}
+
 	log.Info(b.PreviousBlockHash)
+	log.Info(b.BlockHeader.PreviousBlockHash)
 	log.Info(b.Timestamp)
+	log.Info(b.BlockHeader.Timestamp)
+	log.Info(b.Nonce)
+	log.Info(b.BlockHeader.Nonce)
+	log.Info(bt.Seed)
 
 	// TODO
 	if m.block == nil || b.PreviousBlockHash != m.block.PreviousBlockHash {
@@ -171,6 +181,7 @@ func (m *MiningPool) SubmitBlock(b *types.Block) error {
 
 	blockHash := b.BlockHeader.Hash()
 	m.newBlockCh <- &blockHash
+	m.generateBlock()
 	return nil
 }
 
