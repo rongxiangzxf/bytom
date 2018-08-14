@@ -5,10 +5,12 @@ import (
 
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
+	// "github.com/bytom/mining"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 )
 
+// TODO
 type GbtReq struct {
 	Capabilities []string `json:"capabilities,omitempty"`
 	Mode         string   `json:"mode,omitempty"`
@@ -218,7 +220,10 @@ func (a *API) stopMining() Response {
 	return NewSuccessResponse("")
 }
 
-func (a *API) submitBlock() Response {
+// TODO
+func (a *API) submitBlock(b *types.Block) Response {
+	a.miningPool.SubmitBlock(b)
+	return NewSuccessResponse("")
 	return NewErrorResponse(errors.New("submit-block not implemented yet."))
 }
 
@@ -271,9 +276,14 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 			return nil, err
 		}
 	*/
+	block := a.miningPool.GetBlockTemplate()
 
-	return NewSuccessResponse("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet.")
-	return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
+	// bt := &mining.BlockTemplate{
+	// 	BlockHeader:  &block.BlockHeader,
+	// 	Transactions: block.Transactions,
+	// }
+	return NewSuccessResponse(block)
+	// return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
 }
 
 func (a *API) handleGbtProposal(ins *GbtReq) Response {

@@ -129,3 +129,28 @@ func (m *MiningPool) submitWork(bh *types.BlockHeader) error {
 	m.newBlockCh <- &blockHash
 	return nil
 }
+
+func (m *MiningPool) SubmitBlock(b *types.Block) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	log.Info(b.PreviousBlockHash)
+	log.Info(b.Timestamp)
+
+	// TODO
+	if m.block == nil || b.PreviousBlockHash != m.block.PreviousBlockHash {
+		return errors.New("pending mining block has been changed")
+	}
+
+	isOrphan, err := m.chain.ProcessBlock(b)
+	if err != nil {
+		return err
+	}
+	if isOrphan {
+		return errors.New("block submitted is orphan")
+	}
+
+	blockHash := b.BlockHeader.Hash()
+	m.newBlockCh <- &blockHash
+	return nil
+}

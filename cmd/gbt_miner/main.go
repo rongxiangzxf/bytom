@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	// "time"
 
 	// "github.com/bytom/api"
+	// "github.com/bytom/mining"
 	// "github.com/bytom/consensus"
 	// "github.com/bytom/consensus/difficulty"
 	// "github.com/bytom/protocol/bc"
@@ -37,7 +39,7 @@ func getBlockHeaderByHeight(height uint64) {
 }
 
 func main() {
-	data, _ := util.ClientCall("/get-block-template", struct{}{})
+	data, _ := util.ClientCall("/get-block-template", &struct{}{})
 	if data == nil {
 		os.Exit(1)
 	}
@@ -45,11 +47,23 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println(rawData)
-	// resp := &api.GetWorkResp{}
-	// if err = json.Unmarshal(rawData, resp); err != nil {
-	// 	log.Fatalln(err)
+
+	// type GbtResp struct {
+	// 	Status string `json:"status"`
+	// 	Data      mining.BlockTemplate `json:"BlockTemplate"`
 	// }
+	// bt := &mining.BlockTemplate{}
+	bt := &types.Block{}
+	if err = json.Unmarshal(rawData, bt); err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(bt.BlockHeader)
+	log.Println(bt.Timestamp)
+
+	util.ClientCall("/submit-block", bt)
+
+	// bt.Timestamp = uint64(time.Now().Unix())
+	// log.Println(bt.Timestamp)
 
 	// log.Println("Mining at height:", resp.BlockHeader.Height)
 	// if lastHeight != resp.BlockHeader.Height {

@@ -68,6 +68,12 @@ func createCoinbaseTx(accountManager *account.Manager, amount uint64, blockHeigh
 
 // TODO
 type BlockTemplate struct {
+	BlockHeader       *types.BlockHeader `json:"block_header,omitempty"`
+	Transactions      []*types.Tx        `json:"transactions,omitempty"`
+	Fees              []int64            `json:"fees,omitempty"`
+	SigOpCosts        []int64            `json:"sig_op_costs,omitempty"`
+	ValidPayAddress   bool               `json:"valid_pay_address,omitempty"`
+	WitnessCommitment []byte             `json:"witness_commitment,omitempty"`
 }
 
 /*
