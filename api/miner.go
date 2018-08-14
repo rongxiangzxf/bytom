@@ -221,7 +221,7 @@ func (a *API) stopMining() Response {
 }
 
 // TODO
-func (a *API) submitBlock(b mining.BlockTemplate) Response {
+func (a *API) submitBlock(b *mining.BlockTemplate) Response {
 	a.miningPool.SubmitBlock(b)
 	return NewSuccessResponse("")
 	return NewErrorResponse(errors.New("submit-block not implemented yet."))

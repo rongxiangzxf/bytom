@@ -20,8 +20,9 @@ const (
 )
 
 type submitBlockMsg struct {
-	blockHeader *types.BlockHeader
-	reply       chan error
+	blockHeader   *types.BlockHeader
+	blocktemplate *mining.BlockTemplate
+	reply         chan error
 }
 
 // MiningPool is the support struct for p2p mine pool
@@ -59,7 +60,12 @@ func (m *MiningPool) blockUpdater() {
 			m.generateBlock()
 
 		case submitMsg := <-m.submitCh:
-			err := m.submitWork(submitMsg.blockHeader)
+			var err error
+			if submitMsg.blocktemplate == nil {
+				err = m.submitWork(submitMsg.blockHeader)
+			} else {
+				err = m.submitBlock(submitMsg.blocktemplate)
+			}
 			if err == nil {
 				m.generateBlock()
 			}
@@ -97,8 +103,9 @@ func (m *MiningPool) generateBlock() {
 		lastGenerated: now,
 		prevHash:      &bh.PreviousBlockHash,
 		template: &mining.BlockTemplate{
-			BlockHeader: &bh,
-			Seed:        seed,
+			BlockHeader:  &bh,
+			Seed:         seed,
+			Transactions: m.block.Transactions,
 		},
 		// minTimestamp:  time.Time,
 	}
@@ -126,6 +133,17 @@ func (m *MiningPool) SubmitWork(bh *types.BlockHeader) error {
 	return err
 }
 
+// SubmitBlock will try to submit the result to the blockchain
+func (m *MiningPool) SubmitBlock(bt *mining.BlockTemplate) error {
+	reply := make(chan error, 1)
+	m.submitCh <- &submitBlockMsg{blocktemplate: bt, reply: reply}
+	err := <-reply
+	if err != nil {
+		log.WithFields(log.Fields{"err": err, "height": bt.BlockHeader.Height}).Warning("submitBlock failed")
+	}
+	return err
+}
+
 func (m *MiningPool) submitWork(bh *types.BlockHeader) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -149,7 +167,7 @@ func (m *MiningPool) submitWork(bh *types.BlockHeader) error {
 	return nil
 }
 
-func (m *MiningPool) SubmitBlock(bt mining.BlockTemplate) error {
+func (m *MiningPool) submitBlock(bt *mining.BlockTemplate) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -158,13 +176,15 @@ func (m *MiningPool) SubmitBlock(bt mining.BlockTemplate) error {
 		Transactions: bt.Transactions,
 	}
 
-	log.Info(b.PreviousBlockHash)
-	log.Info(b.BlockHeader.PreviousBlockHash)
-	log.Info(b.Timestamp)
-	log.Info(b.BlockHeader.Timestamp)
-	log.Info(b.Nonce)
-	log.Info(b.BlockHeader.Nonce)
-	log.Info(bt.Seed)
+	// log.Info(b.PreviousBlockHash)
+	// log.Info(b.BlockHeader.PreviousBlockHash)
+	// log.Info(b.Timestamp)
+	// log.Info(b.BlockHeader.Timestamp)
+	// log.Info(b.Nonce)
+	// log.Info(b.BlockHeader.Nonce)
+	// log.Info(bt.Seed)
+	// log.Info(bt)
+	// log.Info(b.Transactions)
 
 	// TODO
 	if m.block == nil || b.PreviousBlockHash != m.block.PreviousBlockHash {
@@ -181,7 +201,7 @@ func (m *MiningPool) SubmitBlock(bt mining.BlockTemplate) error {
 
 	blockHash := b.BlockHeader.Hash()
 	m.newBlockCh <- &blockHash
-	m.generateBlock()
+
 	return nil
 }
 

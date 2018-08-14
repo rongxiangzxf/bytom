@@ -42,11 +42,8 @@ func getBlockHeaderByHeight(height uint64) {
 	log.Println("Reward:", resp.Reward)
 }
 
-// TODO
 func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
-	lastNonce := uint64(0)
-	log.Println("Start from nonce:", lastNonce+1)
-	for i := uint64(lastNonce + 1); i <= maxNonce; i++ {
+	for i := uint64(0); i <= maxNonce; i++ {
 		bh.Nonce = i
 		log.Printf("nonce = %v\n", i)
 		headerHash := bh.Hash()
@@ -55,7 +52,6 @@ func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
 			return true
 		}
 	}
-	log.Println("Stop at nonce:", bh.Nonce)
 	return false
 }
 
@@ -69,38 +65,21 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// type GbtResp struct {
-	// 	Status string `json:"status"`
-	// 	Data      mining.BlockTemplate `json:"BlockTemplate"`
-	// }
-	// bt := &mining.BlockTemplate{}
 	bt := &mining.BlockTemplate{}
 	if err = json.Unmarshal(rawData, bt); err != nil {
 		log.Fatalln(err)
 	}
 	// log.Println(bt.BlockHeader)
 	// log.Println(bt.BlockHeader.Timestamp)
-
-	if doWork(bt.BlockHeader, bt.Seed) {
-		// log.Println("bh:", bt.BlockHeader)
-		log.Println("Nonce:", bt.BlockHeader.Nonce)
-		util.ClientCall("/submit-block", bt)
-	}
-
 	// bt.Timestamp = uint64(time.Now().Unix())
 	// log.Println(bt.Timestamp)
 
-	// log.Println("Mining at height:", resp.BlockHeader.Height)
-	// if lastHeight != resp.BlockHeader.Height {
-	// 	lastNonce = ^uint64(0)
-	// }
-	// if doWork(resp.BlockHeader, resp.Seed) {
-	// 	util.ClientCall("/submit-work", &api.SubmitWorkReq{BlockHeader: resp.BlockHeader})
-	// 	getBlockHeaderByHeight(resp.BlockHeader.Height)
-	// }
+	log.Println("Mining at height:", bt.BlockHeader.Height)
+	if doWork(bt.BlockHeader, bt.Seed) {
+		// log.Println("bh:", bt.BlockHeader)
+		// log.Println("Nonce:", bt.BlockHeader.Nonce)
+		util.ClientCall("/submit-block", bt)
+		getBlockHeaderByHeight(bt.BlockHeader.Height)
+	}
 
-	// lastHeight = resp.BlockHeader.Height
-	// if !isCrazy {
-	// 	return
-	// }
 }
