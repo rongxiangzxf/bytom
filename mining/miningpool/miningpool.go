@@ -61,10 +61,12 @@ func (m *MiningPool) blockUpdater() {
 
 		case submitMsg := <-m.submitCh:
 			var err error
-			if submitMsg.blocktemplate == nil {
+			if submitMsg.blockHeader != nil && submitMsg.blocktemplate == nil {
 				err = m.submitWork(submitMsg.blockHeader)
-			} else {
+			} else if submitMsg.blockHeader == nil && submitMsg.blocktemplate != nil {
 				err = m.submitBlock(submitMsg.blocktemplate)
+			} else {
+				err = errors.New("miningpool: submitMsg error")
 			}
 			if err == nil {
 				m.generateBlock()
