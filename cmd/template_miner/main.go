@@ -19,9 +19,9 @@ const (
 	maxNonce = ^uint64(0) // 2^64 - 1
 )
 
-func getBlockHeaderByHeight(height uint64) {
+func checkReward(bh string) {
 	type Req struct {
-		BlockHeight uint64 `json:"block_height"`
+		BlockHash string `json:"block_hash"`
 	}
 
 	type Resp struct {
@@ -29,7 +29,7 @@ func getBlockHeaderByHeight(height uint64) {
 		Reward      uint64             `json:"reward"`
 	}
 
-	data, _ := util.ClientCall("/get-block-header", Req{BlockHeight: height})
+	data, _ := util.ClientCall("/get-block-header", Req{BlockHash: bh})
 	rawData, err := json.Marshal(data)
 	if err != nil {
 		log.Fatalln(err)
@@ -55,6 +55,13 @@ func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
 	return false
 }
 
+func tweakTemplate(bt *mining.BlockTemplate) {
+	// log.Println(bt.BlockHeader)
+	// log.Println(bt.BlockHeader.Timestamp)
+	// bt.Timestamp = uint64(time.Now().Unix())
+	// log.Println(bt.Timestamp)
+}
+
 func main() {
 	data, _ := util.ClientCall("/get-block-template", &struct{}{})
 	if data == nil {
@@ -69,17 +76,14 @@ func main() {
 	if err = json.Unmarshal(rawData, bt); err != nil {
 		log.Fatalln(err)
 	}
-	// log.Println(bt.BlockHeader)
-	// log.Println(bt.BlockHeader.Timestamp)
-	// bt.Timestamp = uint64(time.Now().Unix())
-	// log.Println(bt.Timestamp)
+
+	tweakTemplate(bt)
 
 	log.Println("Mining at height:", bt.BlockHeader.Height)
 	if doWork(bt.BlockHeader, bt.Seed) {
-		// log.Println("bh:", bt.BlockHeader)
-		// log.Println("Nonce:", bt.BlockHeader.Nonce)
 		util.ClientCall("/submit-block", bt)
-		getBlockHeaderByHeight(bt.BlockHeader.Height)
-	}
 
+		headerHash := bt.BlockHeader.Hash()
+		checkReward(headerHash.String())
+	}
 }

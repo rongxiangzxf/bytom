@@ -48,6 +48,14 @@ func (a *API) getBlockTemplate(ins *GbtReq) Response {
 	return NewErrorResponse(errors.New("Invalid mode."))
 }
 
+func (a *API) submitBlock(b *mining.BlockTemplate) Response {
+	err := a.miningPool.SubmitBlock(b)
+	if err != nil {
+		return NewErrorResponse(err)
+	}
+	return NewSuccessResponse("")
+}
+
 // BlockHeaderJSON struct provides support for get work in json format, when it also follows
 // BlockHeader structure
 type BlockHeaderJSON struct {
@@ -218,13 +226,6 @@ func (a *API) stopMining() Response {
 		return NewErrorResponse(errors.New("Failed to stop mining"))
 	}
 	return NewSuccessResponse("")
-}
-
-// TODO
-func (a *API) submitBlock(b *mining.BlockTemplate) Response {
-	a.miningPool.SubmitBlock(b)
-	return NewSuccessResponse("")
-	return NewErrorResponse(errors.New("submit-block not implemented yet."))
 }
 
 func (a *API) handleGbtRequest(ins *GbtReq) Response {
