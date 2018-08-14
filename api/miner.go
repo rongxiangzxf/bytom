@@ -276,13 +276,14 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 			return nil, err
 		}
 	*/
-	block := a.miningPool.GetBlockTemplate()
+	template := a.miningPool.GetBlockTemplate()
 
 	// bt := &mining.BlockTemplate{
-	// 	BlockHeader:  &block.BlockHeader,
-	// 	Transactions: block.Transactions,
+	// 	BlockHeader:  template.BlockHeader,
+	// 	Seed:         template.Seed,
+	// 	Transactions: template.Transactions,
 	// }
-	return NewSuccessResponse(block)
+	return NewSuccessResponse(template)
 	// return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
 }
 

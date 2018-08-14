@@ -7,12 +7,16 @@ import (
 	// "time"
 
 	// "github.com/bytom/api"
-	// "github.com/bytom/mining"
 	// "github.com/bytom/consensus"
-	// "github.com/bytom/consensus/difficulty"
-	// "github.com/bytom/protocol/bc"
+	"github.com/bytom/consensus/difficulty"
+	// "github.com/bytom/mining"
+	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/util"
+)
+
+const (
+	maxNonce = ^uint64(0) // 2^64 - 1
 )
 
 func getBlockHeaderByHeight(height uint64) {
@@ -38,6 +42,22 @@ func getBlockHeaderByHeight(height uint64) {
 	log.Println("Reward:", resp.Reward)
 }
 
+func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
+	lastNonce := uint64(0)
+	log.Println("Start from nonce:", lastNonce+1)
+	for i := uint64(lastNonce + 1); i <= maxNonce; i++ {
+		bh.Nonce = i
+		// log.Printf("nonce = %v\n", i)
+		headerHash := bh.Hash()
+		if difficulty.CheckProofOfWork(&headerHash, seed, bh.Bits) {
+			log.Printf("Mining succeed! Proof hash: %v\n", headerHash.String())
+			return true
+		}
+	}
+	log.Println("Stop at nonce:", bh.Nonce)
+	return false
+}
+
 func main() {
 	data, _ := util.ClientCall("/get-block-template", &struct{}{})
 	if data == nil {
@@ -60,7 +80,9 @@ func main() {
 	log.Println(bt.BlockHeader)
 	log.Println(bt.Timestamp)
 
-	util.ClientCall("/submit-block", bt)
+	if doWork(&bt.BlockHeader, &bt.BlockHeader.Seed) {
+		util.ClientCall("/submit-block", bt)
+	}
 
 	// bt.Timestamp = uint64(time.Now().Unix())
 	// log.Println(bt.Timestamp)

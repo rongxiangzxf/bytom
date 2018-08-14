@@ -26,9 +26,10 @@ type submitBlockMsg struct {
 
 // MiningPool is the support struct for p2p mine pool
 type MiningPool struct {
-	mutex    sync.RWMutex
-	block    *types.Block
-	submitCh chan *submitBlockMsg
+	mutex        sync.RWMutex
+	block        *types.Block
+	gbtWorkState *GbtWorkState
+	submitCh     chan *submitBlockMsg
 
 	chain          *protocol.Chain
 	accountManager *account.Manager
@@ -83,6 +84,15 @@ func (m *MiningPool) generateBlock() {
 	}
 
 	m.block = block
+	// TODO
+	now := time.Now()
+	m.gbtWorkState = &GbtWorkState{
+		lastTxUpdate:  now,
+		lastGenerated: now,
+		prevHash:      &m.block.BlockHeader.PreviousBlockHash,
+		template:      &mining.BlockTemplate{},
+		// minTimestamp:  time.Time,
+	}
 }
 
 // GetWork will return a block header for p2p mining
@@ -153,4 +163,36 @@ func (m *MiningPool) SubmitBlock(b *types.Block) error {
 	blockHash := b.BlockHeader.Hash()
 	m.newBlockCh <- &blockHash
 	return nil
+}
+
+// TODO
+// gbtWorkState houses state that is used in between multiple RPC invocations to
+// getblocktemplate.
+type GbtWorkState struct {
+	mutex         sync.RWMutex
+	lastTxUpdate  time.Time
+	lastGenerated time.Time
+	prevHash      *bc.Hash
+	minTimestamp  time.Time
+	template      *mining.BlockTemplate
+	// notifyMap     map[chainhash.Hash]map[int64]chan struct{}
+	// timeSource    blockchain.MedianTimeSource
+}
+
+func NewGbtWorkState() *GbtWorkState {
+	return &GbtWorkState{}
+}
+
+func (ws *GbtWorkState) getBlockTemplate() *mining.BlockTemplate {
+	ws.mutex.Lock()
+	defer ws.mutex.Unlock()
+
+	return ws.template
+}
+
+func (m *MiningPool) GetBlockTemplate() *mining.BlockTemplate {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	return m.gbtWorkState.getBlockTemplate()
 }
