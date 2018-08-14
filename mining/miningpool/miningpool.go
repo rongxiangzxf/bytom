@@ -85,12 +85,21 @@ func (m *MiningPool) generateBlock() {
 
 	m.block = block
 	// TODO
+	bh := m.block.BlockHeader
 	now := time.Now()
+	seed, err := m.chain.CalcNextSeed(&bh.PreviousBlockHash)
+	if err != nil {
+		log.Errorf("miningpool: failed on calc next seed: %v", err)
+		return
+	}
 	m.gbtWorkState = &GbtWorkState{
 		lastTxUpdate:  now,
 		lastGenerated: now,
-		prevHash:      &m.block.BlockHeader.PreviousBlockHash,
-		template:      &mining.BlockTemplate{},
+		prevHash:      &bh.PreviousBlockHash,
+		template: &mining.BlockTemplate{
+			BlockHeader: &bh,
+			Seed:        seed,
+		},
 		// minTimestamp:  time.Time,
 	}
 }
@@ -179,10 +188,6 @@ type GbtWorkState struct {
 	// timeSource    blockchain.MedianTimeSource
 }
 
-func NewGbtWorkState() *GbtWorkState {
-	return &GbtWorkState{}
-}
-
 func (ws *GbtWorkState) getBlockTemplate() *mining.BlockTemplate {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
@@ -194,5 +199,9 @@ func (m *MiningPool) GetBlockTemplate() *mining.BlockTemplate {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	return m.gbtWorkState.getBlockTemplate()
+	if m.gbtWorkState != nil {
+		return m.gbtWorkState.getBlockTemplate()
+	} else {
+		return nil
+	}
 }
