@@ -272,6 +272,7 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 		}
 	*/
 
+	return NewSuccessResponse("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet.")
 	return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
 }
 
