@@ -75,9 +75,6 @@ type BlockTemplate struct {
 	Block *types.Block
 	Seed  bc.Hash
 
-	// BIP22
-	// sigoplimit
-
 	//btcd
 	Fees              []int64 `json:"fees,omitempty"`
 	SigOpCosts        []int64 `json:"sig_op_costs,omitempty"`

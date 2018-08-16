@@ -6,10 +6,10 @@ import (
 	"os"
 	// "time"
 
-	// "github.com/bytom/api"
+	"github.com/bytom/api"
 	// "github.com/bytom/consensus"
 	"github.com/bytom/consensus/difficulty"
-	"github.com/bytom/mining"
+	// "github.com/bytom/mining"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/util"
@@ -55,11 +55,63 @@ func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
 	return false
 }
 
-func tweakTemplate(bt *mining.BlockTemplate) {
-	// log.Println(bt.BlockHeader)
-	// log.Println(bt.BlockHeader.Timestamp)
-	// bt.Timestamp = uint64(time.Now().Unix())
-	// log.Println(bt.Timestamp)
+/*
+   {
+     "status": "success",
+     "data": {
+       "hash": "ce4fe9431cd0225b3a811f8f8ec922f2b07a921bb12a8dddae9a85540072c770",
+       "size": 546,
+       "version": 1,
+       "height": 0,
+       "previous_block_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+       "timestamp": 1528945000,
+       "nonce": 9253507043297,
+       "bits": 2305843009214532600,
+       "difficulty": "20",
+       "transaction_merkle_root": "58e45ceb675a0b3d7ad3ab9d4288048789de8194e9766b26d8f42fdb624d4390",
+       "transaction_status_hash": "c9c377e5192668bc0a367e4a4764f11e7c725ecced1d7b6a492974fab1b6d5bc",
+       "transactions": [
+         {
+           "id": "158d7d7c6a8d2464725d508fafca76f0838d998eacaacb42ccc58cfb0c155352",
+           "version": 1,
+           "size": 151,
+           "time_range": 0,
+           "inputs": [
+             {
+               "type": "coinbase",
+               "asset_id": "0000000000000000000000000000000000000000000000000000000000000000",
+               "asset_definition": {},
+               "amount": 0,
+               "arbitrary": "496e666f726d6174696f6e20697320706f7765722e202d2d204a616e2f31312f323031332e20436f6d707574696e6720697320706f7765722e202d2d204170722f32342f323031382e",
+               "input_id": "953b17a15c82cc524e0e25230736a512809dc1a5fe6c0b29747fa2de2e2d64b4"
+             }
+           ],
+           "outputs": [
+             {
+               "type": "control",
+               "id": "e3325bf07c4385af4b60ad6ecc682ee0773f9b96e1cfbbae9f0f12b86b5f1093",
+               "position": 0,
+               "asset_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+               "asset_definition": {},
+               "amount": 140700041250000000,
+               "control_program": "00148c9d063ff74ee6d9ffa88d83aeb038068366c4c4",
+               "address": "sm1q3jwsv0lhfmndnlag3kp6avpcq6pkd3xyxg7z8f"
+             }
+           ],
+           "status_fail": false,
+           "mux_id": "d5156f4477fcb694388e6aed7ca390e5bc81bb725ce7461caa241777c1f62236"
+         }
+       ]
+     }
+   }
+*/
+
+func constructBlock(gbtResp *api.GbtResp) *types.Block {
+	block := &types.Block{}
+	return block
+}
+
+func tweakBlock(b *types.Block, gbtResp *api.GbtResp) {
 }
 
 func main() {
@@ -72,18 +124,19 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	bt := &mining.BlockTemplate{}
-	if err = json.Unmarshal(rawData, bt); err != nil {
+	gbtResp := &api.GbtResp{}
+	if err = json.Unmarshal(rawData, gbtResp); err != nil {
 		log.Fatalln(err)
 	}
 
-	tweakTemplate(bt)
+	b := constructBlock(gbtResp)
+	tweakBlock(b, gbtResp)
 
-	log.Println("Mining at height:", bt.BlockHeader.Height)
-	if doWork(bt.BlockHeader, bt.Seed) {
-		util.ClientCall("/submit-block", bt)
+	log.Println("Mining at height:", b.BlockHeader.Height)
+	if doWork(&b.BlockHeader, &gbtResp.Seed) {
+		util.ClientCall("/submit-block", b)
 
-		headerHash := bt.BlockHeader.Hash()
+		headerHash := b.BlockHeader.Hash()
 		checkReward(headerHash.String())
 	}
 }
