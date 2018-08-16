@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"github.com/bytom/consensus"
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
 	"github.com/bytom/protocol/bc"
@@ -33,17 +34,23 @@ type GbtReq struct {
 }
 
 type GbtResp struct {
-	Version      uint64      `json:"version"`
-	Height       uint64      `json:"height"`
-	PreBlkHash   bc.Hash     `json:"previousblockhash"`
-	CurTime      uint64      `json:"curtime"`
-	Bits         uint64      `json:"bits"`
-	Transactions []*types.Tx `json:"transactions,omitempty"`
-	Seed         bc.Hash     `json:"seed"`
+	Bits          uint64             `json:"bits"`
+	CurTime       uint64             `json:"curtime"`
+	Height        uint64             `json:"height"`
+	PreBlkHash    bc.Hash            `json:"previousblockhash"`
+	MaxBlockGas   uint64             `json:"max_block_gas"`
+	Transactions  []*types.Tx        `json:"transactions"`
+	Version       uint64             `json:"version"`
+	CoinbaseAux   chainjson.HexBytes `json:"coinbaseaux,omitempty"`
+	CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
+	CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
+	Seed          bc.Hash            `json:"seed"`
+	WorkID        uint64             `json:"workid,omitempty"` // TODO
 }
 
 func (a *API) getBlockTemplate(ins *GbtReq) Response {
-	mode := "template" // Default mode: template
+	// Default mode: template
+	mode := "template"
 	if ins.Mode != "" {
 		mode = ins.Mode
 	}
@@ -293,13 +300,18 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 		return NewErrorResponse(errors.New("block template not ready yet."))
 	} else {
 		gbtResp := &GbtResp{
-			Version:      template.Block.BlockHeader.Version,
+			Bits:         template.Block.BlockHeader.Bits,
+			CurTime:      template.Block.BlockHeader.Timestamp,
 			Height:       template.Block.BlockHeader.Height,
 			PreBlkHash:   template.Block.BlockHeader.PreviousBlockHash,
-			CurTime:      template.Block.BlockHeader.Timestamp,
-			Bits:         template.Block.BlockHeader.Bits,
+			MaxBlockGas:  consensus.MaxBlockGas,
 			Transactions: template.Block.Transactions[1:],
-			Seed:         template.Seed,
+			Version:      template.Block.BlockHeader.Version,
+			CoinbaseAux:  []byte{},
+			// CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
+			// CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
+			Seed: template.Seed,
+			// TODO: WorkID
 		}
 		return NewSuccessResponse(gbtResp)
 	}
