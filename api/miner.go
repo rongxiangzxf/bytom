@@ -37,14 +37,14 @@ type GbtResp struct {
 	Bits          uint64             `json:"bits"`
 	CurTime       uint64             `json:"curtime"`
 	Height        uint64             `json:"height"`
-	PreBlkHash    bc.Hash            `json:"previousblockhash"`
+	PreBlkHash    *bc.Hash           `json:"previousblockhash"`
 	MaxBlockGas   uint64             `json:"max_block_gas"`
 	Transactions  []*types.Tx        `json:"transactions"`
 	Version       uint64             `json:"version"`
 	CoinbaseAux   chainjson.HexBytes `json:"coinbaseaux,omitempty"`
 	CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
 	CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
-	Seed          bc.Hash            `json:"seed"`
+	Seed          *bc.Hash           `json:"seed"`
 	WorkID        uint64             `json:"workid,omitempty"` // TODO
 }
 
@@ -303,7 +303,7 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 			Bits:         template.Block.BlockHeader.Bits,
 			CurTime:      template.Block.BlockHeader.Timestamp,
 			Height:       template.Block.BlockHeader.Height,
-			PreBlkHash:   template.Block.BlockHeader.PreviousBlockHash,
+			PreBlkHash:   &template.Block.BlockHeader.PreviousBlockHash,
 			MaxBlockGas:  consensus.MaxBlockGas,
 			Transactions: template.Block.Transactions[1:],
 			Version:      template.Block.BlockHeader.Version,

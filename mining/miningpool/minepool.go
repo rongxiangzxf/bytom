@@ -88,32 +88,20 @@ func (m *MiningPool) generateBlock() {
 		return
 	}
 
-	block, err := mining.NewBlockToMine(m.chain, m.txPool, m.accountManager)
+	template, err := mining.NewBlockTemplate(m.chain, m.txPool, m.accountManager)
 	if err != nil {
-		log.Errorf("miningpool: failed on create new block to mine: %v", err)
+		log.Errorf("miningpool: failed on create new block template: %v", err)
 		return
 	}
 
-	m.block = block
-	// TODO
-	bh := m.block.BlockHeader
 	now := time.Now()
-	seed, err := m.chain.CalcNextSeed(&bh.PreviousBlockHash)
-	if err != nil {
-		log.Errorf("miningpool: failed on calc next seed: %v", err)
-		return
-	}
-
 	m.gbtWorkState = &GbtWorkState{
 		lastTxUpdate:  now,
 		lastGenerated: now,
-		prevHash:      &bh.PreviousBlockHash,
-		template: &mining.BlockTemplate{
-			Block: m.block,
-			Seed:  *seed,
-		},
-		// minTimestamp:  time.Time,
+		prevHash:      &template.Block.BlockHeader.PreviousBlockHash,
+		template:      template,
 	}
+	m.block = template.Block
 }
 
 // GetWork will return a block header for p2p mining

@@ -72,13 +72,13 @@ func createCoinbaseTx(accountManager *account.Manager, amount uint64, blockHeigh
 // Sizelimit is not specified explicitly while there actually exists a upper
 // bound for block_size according to MaxBlockGas
 type BlockTemplate struct {
-	Block *types.Block
-	Seed  bc.Hash
+	Block           *types.Block
+	Seed            *bc.Hash
+	ValidPayAddress bool
 
 	//btcd
 	Fees              []int64 `json:"fees,omitempty"`
 	SigOpCosts        []int64 `json:"sig_op_costs,omitempty"`
-	ValidPayAddress   bool    `json:"valid_pay_address,omitempty"`
 	WitnessCommitment []byte  `json:"witness_commitment,omitempty"`
 }
 
@@ -120,8 +120,8 @@ type BlockTemplate struct {
 }
 */
 
-// NewBlockToMine returns a new block that is ready to be solved
-func NewBlockToMine(c *protocol.Chain, txPool *protocol.TxPool, accountManager *account.Manager) (b *types.Block, err error) {
+// NewBlockTemplate returns a new block template that is ready to be solved
+func NewBlockTemplate(c *protocol.Chain, txPool *protocol.TxPool, accountManager *account.Manager) (template *BlockTemplate, err error) {
 	view := state.NewUtxoViewpoint()
 	txStatus := bc.NewTransactionStatus()
 	txStatus.SetStatus(0, false)
@@ -138,7 +138,7 @@ func NewBlockToMine(c *protocol.Chain, txPool *protocol.TxPool, accountManager *
 		return nil, err
 	}
 
-	b = &types.Block{
+	b := &types.Block{
 		BlockHeader: types.BlockHeader{
 			Version:           1,
 			Height:            nextBlockHeight,
@@ -207,5 +207,25 @@ func NewBlockToMine(c *protocol.Chain, txPool *protocol.TxPool, accountManager *
 	}
 
 	b.BlockHeader.BlockCommitment.TransactionStatusHash, err = bc.TxStatusMerkleRoot(txStatus.VerifyStatus)
-	return b, err
+
+	seed, err := c.CalcNextSeed(&b.BlockHeader.PreviousBlockHash)
+	if err != nil {
+		log.Errorf("NewBlockTemplate: failed on calc next seed: %v", err)
+		return
+	}
+
+	validPayAddress := false
+	if accountManager != nil {
+		if _, err := accountManager.GetMiningAddress(); err == nil {
+			validPayAddress = true
+		}
+	}
+
+	template = &BlockTemplate{
+		Block:           b,
+		Seed:            seed,
+		ValidPayAddress: validPayAddress,
+	}
+
+	return template, err
 }

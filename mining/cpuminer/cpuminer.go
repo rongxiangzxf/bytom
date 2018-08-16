@@ -89,12 +89,13 @@ out:
 		default:
 		}
 
-		block, err := mining.NewBlockToMine(m.chain, m.txPool, m.accountManager)
+		template, err := mining.NewBlockTemplate(m.chain, m.txPool, m.accountManager)
 		if err != nil {
-			log.Errorf("Mining: failed on create new block to mine: %v", err)
+			log.Errorf("cpuminer: failed on create new block template: %v", err)
 			continue
 		}
 
+		block := template.Block
 		if m.solveBlock(block, ticker, quit) {
 			if isOrphan, err := m.chain.ProcessBlock(block); err == nil {
 				log.WithFields(log.Fields{
