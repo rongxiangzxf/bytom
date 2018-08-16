@@ -160,11 +160,8 @@ func (m *MiningPool) generateBlock() {
 		lastGenerated: now,
 		prevHash:      &bh.PreviousBlockHash,
 		template: &mining.BlockTemplate{
-			Bits:    bh.Bits,
-			CurTime: uint64(time.Now().Unix()),
-			// BlockHeader:  &bh,
-			Seed:         seed,
-			Transactions: m.block.Transactions,
+			Block: m.block,
+			Seed:  *seed,
 		},
 		// minTimestamp:  time.Time,
 	}
@@ -229,16 +226,6 @@ func (m *MiningPool) submitWork(bh *types.BlockHeader) error {
 func (m *MiningPool) submitBlock(b *types.Block) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-
-	// log.Info(b.PreviousBlockHash)
-	// log.Info(b.BlockHeader.PreviousBlockHash)
-	// log.Info(b.Timestamp)
-	// log.Info(b.BlockHeader.Timestamp)
-	// log.Info(b.Nonce)
-	// log.Info(b.BlockHeader.Nonce)
-	// log.Info(bt.Seed)
-	// log.Info(bt)
-	// log.Info(b.Transactions)
 
 	// TODO
 	if m.block == nil || b.PreviousBlockHash != m.block.PreviousBlockHash {

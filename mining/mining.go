@@ -67,17 +67,22 @@ func createCoinbaseTx(accountManager *account.Manager, amount uint64, blockHeigh
 }
 
 // TODO
+// txsize
+// timerange
+// Sizelimit is not specified explicitly while there actually exists a upper
+// bound for block_size according to MaxBlockGas
 type BlockTemplate struct {
-	Bits    uint64 `json:"bits"`
-	CurTime uint64 `json:"curtime"`
-	// BlockHeader       *types.BlockHeader `json:"block_header,omitempty"`
-	Height            uint64      `json:"height"`
-	Seed              *bc.Hash    `json:"seed"`
-	Transactions      []*types.Tx `json:"transactions,omitempty"`
-	Fees              []int64     `json:"fees,omitempty"`
-	SigOpCosts        []int64     `json:"sig_op_costs,omitempty"`
-	ValidPayAddress   bool        `json:"valid_pay_address,omitempty"`
-	WitnessCommitment []byte      `json:"witness_commitment,omitempty"`
+	Block *types.Block
+	Seed  bc.Hash
+
+	// BIP22
+	// sigoplimit
+
+	//btcd
+	Fees              []int64 `json:"fees,omitempty"`
+	SigOpCosts        []int64 `json:"sig_op_costs,omitempty"`
+	ValidPayAddress   bool    `json:"valid_pay_address,omitempty"`
+	WitnessCommitment []byte  `json:"witness_commitment,omitempty"`
 }
 
 /*

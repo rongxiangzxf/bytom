@@ -32,6 +32,16 @@ type GbtReq struct {
 	WorkID string `json:"workid,omitempty"`
 }
 
+type GbtResp struct {
+	Version      uint64      `json:"version"`
+	Height       uint64      `json:"height"`
+	PreBlkHash   bc.Hash     `json:"previousblockhash"`
+	CurTime      uint64      `json:"curtime"`
+	Bits         uint64      `json:"bits"`
+	Transactions []*types.Tx `json:"transactions,omitempty"`
+	Seed         bc.Hash     `json:"seed"`
+}
+
 func (a *API) getBlockTemplate(ins *GbtReq) Response {
 	mode := "template" // Default mode: template
 	if ins.Mode != "" {
@@ -282,7 +292,16 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	if template == nil {
 		return NewErrorResponse(errors.New("block template not ready yet."))
 	} else {
-		return NewSuccessResponse(template)
+		gbtResp := &GbtResp{
+			Version:      template.Block.BlockHeader.Version,
+			Height:       template.Block.BlockHeader.Height,
+			PreBlkHash:   template.Block.BlockHeader.PreviousBlockHash,
+			CurTime:      template.Block.BlockHeader.Timestamp,
+			Bits:         template.Block.BlockHeader.Bits,
+			Transactions: template.Block.Transactions[1:],
+			Seed:         template.Seed,
+		}
+		return NewSuccessResponse(gbtResp)
 	}
 }
 
