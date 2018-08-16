@@ -173,9 +173,9 @@ type SimdConfig struct {
 }
 
 type SideChainConfig struct {
-	FedpegScript    string `mapstructure:"fedpegscript"`
-	SignBlockScript string `mapstructure:"signblockscript"`
-	PeginMinDepth   uint8  `mapstructure:"peginconfirmationdepth"`
+	FedpegXPubs     string `mapstructure:"fedpeg_xpubs"`
+	SignBlockScript string `mapstructure:"sign_block_script"`
+	PeginMinDepth   uint8  `mapstructure:"pegin_confirmation_depth"`
 }
 
 // Default configurable rpc's auth parameters.
@@ -212,7 +212,6 @@ func DeafultSideChainConfig() *SideChainConfig {
 	defaultScript, _ := vmutil.DefaultCoinbaseProgram()
 
 	return &SideChainConfig{
-		FedpegScript:    string(defaultScript),
 		SignBlockScript: string(defaultScript),
 		PeginMinDepth:   6,
 	}
