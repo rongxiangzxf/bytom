@@ -6,17 +6,20 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"github.com/bytom/protocol/vm/vmutil"
 )
 
 type Config struct {
 	// Top level options use an anonymous struct
 	BaseConfig `mapstructure:",squash"`
 	// Options for services
-	P2P    *P2PConfig     `mapstructure:"p2p"`
-	Wallet *WalletConfig  `mapstructure:"wallet"`
-	Auth   *RPCAuthConfig `mapstructure:"auth"`
-	Web    *WebConfig     `mapstructure:"web"`
-	Simd   *SimdConfig    `mapstructure:"simd"`
+	P2P    *P2PConfig       `mapstructure:"p2p"`
+	Wallet *WalletConfig    `mapstructure:"wallet"`
+	Auth   *RPCAuthConfig   `mapstructure:"auth"`
+	Web    *WebConfig       `mapstructure:"web"`
+	Simd   *SimdConfig      `mapstructure:"simd"`
+	Side   *SideChainConfig `mapstructure:"side"`
 }
 
 // Default configurable parameters.
@@ -28,6 +31,7 @@ func DefaultConfig() *Config {
 		Auth:       DefaultRPCAuthConfig(),
 		Web:        DefaultWebConfig(),
 		Simd:       DefaultSimdConfig(),
+		Side:       DeafultSideChainConfig(),
 	}
 }
 
@@ -168,6 +172,12 @@ type SimdConfig struct {
 	Enable bool `mapstructure:"enable"`
 }
 
+type SideChainConfig struct {
+	FedpegScript    string `mapstructure:"fedpegscript"`
+	SignBlockScript string `mapstructure:"signblockscript"`
+	PeginMinDepth   uint8  `mapstructure:"peginconfirmationdepth"`
+}
+
 // Default configurable rpc's auth parameters.
 func DefaultRPCAuthConfig() *RPCAuthConfig {
 	return &RPCAuthConfig{
@@ -194,6 +204,17 @@ func DefaultWalletConfig() *WalletConfig {
 func DefaultSimdConfig() *SimdConfig {
 	return &SimdConfig{
 		Enable: false,
+	}
+}
+
+// DeafultSideChainConfig for sidechain
+func DeafultSideChainConfig() *SideChainConfig {
+	defaultScript, _ := vmutil.DefaultCoinbaseProgram()
+
+	return &SideChainConfig{
+		FedpegScript:    string(defaultScript),
+		SignBlockScript: string(defaultScript),
+		PeginMinDepth:   6,
 	}
 }
 

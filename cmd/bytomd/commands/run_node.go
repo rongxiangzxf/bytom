@@ -6,8 +6,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/bytom/node"
 	"strings"
+
+	"github.com/bytom/node"
 )
 
 var runNodeCmd = &cobra.Command{
@@ -44,6 +45,11 @@ func init() {
 
 	// log flags
 	runNodeCmd.Flags().String("log_file", config.LogFile, "Log output file")
+
+	//sidecain
+	runNodeCmd.Flags().String("fedpegscript", config.Side.FedpegScript, "Change federated peg to use a different script.")
+	runNodeCmd.Flags().String("signblockscript", config.Side.SignBlockScript, "Change federated peg to use a different script.")
+	runNodeCmd.Flags().Uint8("peginconfirmationdepth", config.Side.PeginMinDepth, "Pegin claims must be this deep to be considered valid. (default: 6)")
 
 	RootCmd.AddCommand(runNodeCmd)
 }
