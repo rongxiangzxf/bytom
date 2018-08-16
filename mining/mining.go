@@ -68,13 +68,16 @@ func createCoinbaseTx(accountManager *account.Manager, amount uint64, blockHeigh
 
 // TODO
 type BlockTemplate struct {
-	BlockHeader       *types.BlockHeader `json:"block_header,omitempty"`
-	Seed              *bc.Hash           `json:"seed,omitempty"`
-	Transactions      []*types.Tx        `json:"transactions,omitempty"`
-	Fees              []int64            `json:"fees,omitempty"`
-	SigOpCosts        []int64            `json:"sig_op_costs,omitempty"`
-	ValidPayAddress   bool               `json:"valid_pay_address,omitempty"`
-	WitnessCommitment []byte             `json:"witness_commitment,omitempty"`
+	Bits    uint64 `json:"bits"`
+	CurTime uint64 `json:"curtime"`
+	// BlockHeader       *types.BlockHeader `json:"block_header,omitempty"`
+	Height            uint64      `json:"height"`
+	Seed              *bc.Hash    `json:"seed"`
+	Transactions      []*types.Tx `json:"transactions,omitempty"`
+	Fees              []int64     `json:"fees,omitempty"`
+	SigOpCosts        []int64     `json:"sig_op_costs,omitempty"`
+	ValidPayAddress   bool        `json:"valid_pay_address,omitempty"`
+	WitnessCommitment []byte      `json:"witness_commitment,omitempty"`
 }
 
 /*
@@ -115,8 +118,8 @@ type BlockTemplate struct {
 }
 */
 
-// NewBlockTemplate returns a new block template that is ready to be solved
-func NewBlockTemplate(c *protocol.Chain, txPool *protocol.TxPool, accountManager *account.Manager) (b *types.Block, err error) {
+// NewBlockToMine returns a new block that is ready to be solved
+func NewBlockToMine(c *protocol.Chain, txPool *protocol.TxPool, accountManager *account.Manager) (b *types.Block, err error) {
 	view := state.NewUtxoViewpoint()
 	txStatus := bc.NewTransactionStatus()
 	txStatus.SetStatus(0, false)

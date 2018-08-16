@@ -5,7 +5,6 @@ import (
 
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
-	"github.com/bytom/mining"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 )
@@ -48,7 +47,7 @@ func (a *API) getBlockTemplate(ins *GbtReq) Response {
 	return NewErrorResponse(errors.New("Invalid mode."))
 }
 
-func (a *API) submitBlock(b *mining.BlockTemplate) Response {
+func (a *API) submitBlock(b *types.Block) Response {
 	err := a.miningPool.SubmitBlock(b)
 	if err != nil {
 		return NewErrorResponse(err)
