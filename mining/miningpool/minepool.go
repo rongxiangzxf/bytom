@@ -30,7 +30,7 @@ type submitMsg struct {
 	reply chan error
 }
 
-// MiningPool is the support struct for p2p mine pool
+// MiningPool is the support struct for p2p mining pool
 type MiningPool struct {
 	mutex        sync.RWMutex
 	block        *types.Block
@@ -56,7 +56,7 @@ func NewMiningPool(c *protocol.Chain, accountManager *account.Manager, txPool *p
 	return m
 }
 
-// blockUpdater is the goroutine for keep update mining block
+// blockUpdater is the goroutine to keep updating mining block
 func (m *MiningPool) blockUpdater() {
 	ticker := time.NewTicker(time.Millisecond * blockUpdateMS)
 	for {
@@ -96,6 +96,7 @@ func (m *MiningPool) generateBlock() {
 		return
 	}
 
+	// TODO: what time?
 	now := time.Now()
 	m.GbtWorkState = &GbtWorkState{
 		lastTxUpdate:  now,
