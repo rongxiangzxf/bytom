@@ -270,15 +270,9 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 			"but the server has not been configured with any payment addresses."))
 	}
 
-	// TODO
-	// No point in generating or accepting work before the chain is synced.
-	// currentHeight := s.cfg.Chain.BestSnapshot().Height
-	// if currentHeight != 0 && !s.cfg.SyncMgr.IsCurrent() {
-	// 	return nil, &btcjson.RPCError{
-	// 		Code:    btcjson.ErrRPCClientInInitialDownload,
-	// 		Message: "Bitcoin is downloading blocks...",
-	// 	}
-	// }
+	// NOTE:
+	// In bytom, there is no point to block mining if the chain hasn't been
+	// fully synced, since a connected peer may forge a height.
 
 	// TODO
 	// When a long poll ID was provided, this is a long poll request by the
