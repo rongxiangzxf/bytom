@@ -40,16 +40,6 @@ func createCoinbaseTx(accountManager *account.Manager, amount uint64, blockHeigh
 		return nil, err
 	}
 
-	// TODO
-	// 	insts, err := vm.ParseProgram(script)
-	// 	for _, inst := range insts {
-	// 		log.Info(inst)
-	// 	}
-	// func (b *Builder) AddData(data []byte) *Builder {
-	// 	b.program = append(b.program, vm.PushdataBytes(data)...)
-	//  	return b
-	//  }
-
 	if len(arbitrary) > consensus.CoinbaseArbitrarySizeLimit {
 		return nil, validation.ErrCoinbaseArbitraryOversize
 	}
