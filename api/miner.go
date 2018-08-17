@@ -6,6 +6,7 @@ import (
 	"github.com/bytom/consensus"
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
+	"github.com/bytom/mining/miningpool"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 )
@@ -261,10 +262,27 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	if hasCoinbaseTxn && !hasCoinbaseValue {
 		useCoinbaseValue = false
 	}
-	// TODO
-	if useCoinbaseValue {
-		// return NewErrorResponse(errors.New("state.blockTemplateResult(useCoinbaseValue, nil) not implemented yet."))
+
+	hasMiningAddress := false
+	if a.wallet.AccountMgr != nil {
+		if _, err := a.wallet.AccountMgr.GetMiningAddress(); err == nil {
+			hasMiningAddress = true
+		}
 	}
+	if !useCoinbaseValue && !hasMiningAddress {
+		return NewErrorResponse(errors.New("A coinbase transaction has been requested, " +
+			"but the server has not been configured with any payment addresses."))
+	}
+
+	// TODO
+	// No point in generating or accepting work before the chain is synced.
+	// currentHeight := s.cfg.Chain.BestSnapshot().Height
+	// if currentHeight != 0 && !s.cfg.SyncMgr.IsCurrent() {
+	// 	return nil, &btcjson.RPCError{
+	// 		Code:    btcjson.ErrRPCClientInInitialDownload,
+	// 		Message: "Bitcoin is downloading blocks...",
+	// 	}
+	// }
 
 	// TODO
 	// When a long poll ID was provided, this is a long poll request by the
@@ -274,13 +292,10 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 		return NewErrorResponse(errors.New("long poll not supported yet."))
 	}
 
-	// TODO
 	// Protect concurrent access when updating block templates.
-	/*
-		state := s.gbtWorkState
-		state.Lock()
-		defer state.Unlock()
-	*/
+	state := a.miningPool.GetGbtWorkState()
+	state.Lock()
+	defer state.Unlock()
 
 	// TODO
 	// Get and return a block template.  A new block template will be
@@ -289,32 +304,47 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	// seconds since the last template was generated.  Otherwise, the
 	// timestamp for the existing block template is updated (and possibly
 	// the difficulty on testnet per the consesus rules).
-	/*
-		if err := state.updateBlockTemplate(s, useCoinbaseValue); err != nil {
-			return nil, err
-		}
-	*/
+	if err := state.UpdateBlockTemplate( /*s, */ useCoinbaseValue); err != nil {
+		return NewErrorResponse(err)
+	}
 
-	template := a.miningPool.GetBlockTemplate()
+	return a.blockTemplateResult(state, useCoinbaseValue, nil)
+}
+
+func (a *API) blockTemplateResult(state *miningpool.GbtWorkState, useCoinbaseValue bool, submitOld *bool) Response {
+	template := state.GetBlockTemplate()
 	if template == nil {
 		return NewErrorResponse(errors.New("block template not ready yet."))
-	} else {
-		gbtResp := &GbtResp{
-			Bits:         template.Block.BlockHeader.Bits,
-			CurTime:      template.Block.BlockHeader.Timestamp,
-			Height:       template.Block.BlockHeader.Height,
-			PreBlkHash:   &template.Block.BlockHeader.PreviousBlockHash,
-			MaxBlockGas:  consensus.MaxBlockGas,
-			Transactions: template.Block.Transactions[1:],
-			Version:      template.Block.BlockHeader.Version,
-			CoinbaseAux:  []byte{},
-			// CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
-			// CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
-			Seed: template.Seed,
-			// TODO: WorkID
-		}
-		return NewSuccessResponse(gbtResp)
 	}
+
+	gbtResp := &GbtResp{
+		Bits:         template.Block.BlockHeader.Bits,
+		CurTime:      template.Block.BlockHeader.Timestamp,
+		Height:       template.Block.BlockHeader.Height,
+		PreBlkHash:   &template.Block.BlockHeader.PreviousBlockHash,
+		MaxBlockGas:  consensus.MaxBlockGas,
+		Transactions: template.Block.Transactions[1:], // TODO: descp for RPC result
+		Version:      template.Block.BlockHeader.Version,
+		CoinbaseAux:  []byte{},
+		// CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
+		// CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
+		Seed: template.Seed,
+		// TODO:
+		// WorkID
+		// WeightLimit:  blockchain.MaxBlockWeight,
+		// SigOpLimit:   blockchain.MaxBlockSigOpsCost,
+		// SizeLimit:    wire.MaxBlockPayload,
+		// LongPollID:   templateID,
+		// SubmitOld:    submitOld,
+		// Target:       targetDifficulty,
+		// MinTime:      state.minTimestamp.Unix(),
+		// MaxTime:      maxTime.Unix(),
+		// Mutable:      gbtMutableFields,
+		// NonceRange:   gbtNonceRange,
+		// Capabilities: gbtCapabilities,
+
+	}
+	return NewSuccessResponse(gbtResp)
 }
 
 func (a *API) handleGbtProposal(ins *GbtReq) Response {

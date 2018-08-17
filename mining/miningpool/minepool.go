@@ -187,7 +187,7 @@ func (m *MiningPool) submitBlock(b *types.Block) error {
 // gbtWorkState houses state that is used in between multiple RPC invocations to
 // getblocktemplate.
 type GbtWorkState struct {
-	mutex         sync.RWMutex
+	sync.RWMutex
 	lastTxUpdate  time.Time
 	lastGenerated time.Time
 	prevHash      *bc.Hash
@@ -197,20 +197,24 @@ type GbtWorkState struct {
 	// timeSource    blockchain.MedianTimeSource
 }
 
-func (ws *GbtWorkState) getBlockTemplate() *mining.BlockTemplate {
-	ws.mutex.Lock()
-	defer ws.mutex.Unlock()
+func (m *MiningPool) GetGbtWorkState() *GbtWorkState {
+	// lock?
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	return m.gbtWorkState
+}
 
+func (ws *GbtWorkState) GetBlockTemplate() *mining.BlockTemplate {
+	// lock?
+	ws.RLock()
+	defer ws.RUnlock()
 	return ws.template
 }
 
-func (m *MiningPool) GetBlockTemplate() *mining.BlockTemplate {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	if m.gbtWorkState != nil {
-		return m.gbtWorkState.getBlockTemplate()
-	} else {
-		return nil
-	}
+// TODO
+func (ws *GbtWorkState) UpdateBlockTemplate(useCoinbaseValue bool) error {
+	// lock?
+	ws.Lock()
+	defer ws.Unlock()
+	return nil
 }
