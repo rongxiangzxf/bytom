@@ -12,11 +12,13 @@ import (
 	// "github.com/bytom/mining"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
+	"github.com/bytom/protocol/state"
 	"github.com/bytom/util"
 )
 
 const (
-	maxNonce = ^uint64(0) // 2^64 - 1
+	maxNonce   = ^uint64(0) // 2^64 - 1
+	miningAddr = ""
 )
 
 func checkReward(bh string) {
@@ -107,7 +109,94 @@ func doWork(bh *types.BlockHeader, seed *bc.Hash) bool {
 */
 
 func constructBlock(gbtResp *api.GbtResp) *types.Block {
-	block := &types.Block{}
+	view := state.NewUtxoViewpoint()
+	txStatus := bc.NewTransactionStatus()
+	txStatus.SetStatus(0, false)
+	txEntries := []*bc.Tx{nil}
+	gasUsed := uint64(0)
+	txFee := uint64(0)
+
+	block := &types.Block{
+		BlockHeader: types.BlockHeader{
+			Version:           gbtResp.Version,
+			Height:            gbtResp.Height,
+			PreviousBlockHash: gbtResp.PreBlkHash,
+			Timestamp:         gbtResp.CurTime,
+			Bits:              gbtResp.Bits,
+			BlockCommitment:   types.BlockCommitment{},
+		},
+	}
+
+	bcBlock := &bc.Block{BlockHeader: &bc.BlockHeader{Height: nextBlockHeight}}
+	b.Transactions = []*types.Tx{nil}
+
+	txs := gbtResp.Transactions
+	sort.Sort(byTime(txs))
+
+	// TODO
+	/*
+	   for _, txDesc := range txs {
+	   		tx := txDesc.Tx.Tx
+	   		gasOnlyTx := false
+
+	   		if err := c.GetTransactionsUtxo(view, []*bc.Tx{tx}); err != nil {
+	   			log.WithField("error", err).Error("mining block generate skip tx due to")
+	   			txPool.RemoveTransaction(&tx.ID)
+	   			continue
+	   		}
+
+	   		gasStatus, err := validation.ValidateTx(tx, bcBlock)
+	   		if err != nil {
+	   			if !gasStatus.GasValid {
+	   				log.WithField("error", err).Error("mining block generate skip tx due to")
+	   				txPool.RemoveTransaction(&tx.ID)
+	   				continue
+	   			}
+	   			gasOnlyTx = true
+	   		}
+
+	   		if gasUsed+uint64(gasStatus.GasUsed) > consensus.MaxBlockGas {
+	   			break
+	   		}
+
+	   		if err := view.ApplyTransaction(bcBlock, tx, gasOnlyTx); err != nil {
+	   			log.WithField("error", err).Error("mining block generate skip tx due to")
+	   			txPool.RemoveTransaction(&tx.ID)
+	   			continue
+	   		}
+
+	   		txStatus.SetStatus(len(b.Transactions), gasOnlyTx)
+	   		b.Transactions = append(b.Transactions, txDesc.Tx)
+	   		txEntries = append(txEntries, tx)
+	   		gasUsed += uint64(gasStatus.GasUsed)
+	   		txFee += txDesc.Fee
+
+	   		if gasUsed == consensus.MaxBlockGas {
+	   			break
+	   		}
+	   	}
+
+	   	if gbtResp.CoinbaseTxn != nil {
+	   		block.Transactions[0] = gbtResp.CoinbaseTxn
+	   	} else {
+	   		// creater coinbase transaction
+	   		b.Transactions[0], err = createCoinbaseTx(accountManager, txFee, nextBlockHeight)
+	   		if err != nil {
+	   			return nil, errors.Wrap(err, "fail on createCoinbaseTx")
+	   		}
+	   	}
+	*/
+	txEntries[0] = b.Transactions[0].Tx
+
+	block.BlockHeader.BlockCommitment.TransactionsMerkleRoot, err = bc.TxMerkleRoot(txEntries)
+	if err != nil {
+		panic(err)
+	}
+	block.BlockHeader.BlockCommitment.TransactionStatusHash, err = bc.TxStatusMerkleRoot(txStatus.VerifyStatus)
+	if err != nil {
+		panic(err)
+	}
+
 	return block
 }
 
