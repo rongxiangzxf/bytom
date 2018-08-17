@@ -3,10 +3,8 @@ package api
 import (
 	"context"
 
-	"github.com/bytom/consensus"
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
-	"github.com/bytom/mining/miningpool"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 )
@@ -32,21 +30,6 @@ type GbtReq struct {
 	// "proposal".
 	Data   string `json:"data,omitempty"`
 	WorkID string `json:"workid,omitempty"`
-}
-
-type GbtResp struct {
-	Bits          uint64             `json:"bits"`
-	CurTime       uint64             `json:"curtime"`
-	Height        uint64             `json:"height"`
-	PreBlkHash    *bc.Hash           `json:"previousblockhash"`
-	MaxBlockGas   uint64             `json:"max_block_gas"`
-	Transactions  []*types.Tx        `json:"transactions"`
-	Version       uint64             `json:"version"`
-	CoinbaseAux   chainjson.HexBytes `json:"coinbaseaux,omitempty"`
-	CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
-	CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
-	Seed          *bc.Hash           `json:"seed"`
-	WorkID        uint64             `json:"workid,omitempty"` // TODO
 }
 
 func (a *API) getBlockTemplate(ins *GbtReq) Response {
@@ -304,47 +287,15 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	// seconds since the last template was generated.  Otherwise, the
 	// timestamp for the existing block template is updated (and possibly
 	// the difficulty on testnet per the consesus rules).
-	if err := state.UpdateBlockTemplate( /*s, */ useCoinbaseValue); err != nil {
+	if err := state.UpdateBlockTemplate(useCoinbaseValue); err != nil {
 		return NewErrorResponse(err)
 	}
 
-	return a.blockTemplateResult(state, useCoinbaseValue, nil)
-}
-
-func (a *API) blockTemplateResult(state *miningpool.GbtWorkState, useCoinbaseValue bool, submitOld *bool) Response {
-	template := state.GetBlockTemplate()
-	if template == nil {
-		return NewErrorResponse(errors.New("block template not ready yet."))
+	if gbtResult, err := state.BlockTemplateResult(useCoinbaseValue, nil); err != nil {
+		return NewErrorResponse(err)
+	} else {
+		return NewSuccessResponse(gbtResult)
 	}
-
-	gbtResp := &GbtResp{
-		Bits:         template.Block.BlockHeader.Bits,
-		CurTime:      template.Block.BlockHeader.Timestamp,
-		Height:       template.Block.BlockHeader.Height,
-		PreBlkHash:   &template.Block.BlockHeader.PreviousBlockHash,
-		MaxBlockGas:  consensus.MaxBlockGas,
-		Transactions: template.Block.Transactions[1:], // TODO: descp for RPC result
-		Version:      template.Block.BlockHeader.Version,
-		CoinbaseAux:  []byte{},
-		// CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
-		// CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
-		Seed: template.Seed,
-		// TODO:
-		// WorkID
-		// WeightLimit:  blockchain.MaxBlockWeight,
-		// SigOpLimit:   blockchain.MaxBlockSigOpsCost,
-		// SizeLimit:    wire.MaxBlockPayload,
-		// LongPollID:   templateID,
-		// SubmitOld:    submitOld,
-		// Target:       targetDifficulty,
-		// MinTime:      state.minTimestamp.Unix(),
-		// MaxTime:      maxTime.Unix(),
-		// Mutable:      gbtMutableFields,
-		// NonceRange:   gbtNonceRange,
-		// Capabilities: gbtCapabilities,
-
-	}
-	return NewSuccessResponse(gbtResp)
 }
 
 func (a *API) handleGbtProposal(ins *GbtReq) Response {

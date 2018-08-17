@@ -8,6 +8,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bytom/account"
+	"github.com/bytom/consensus"
+	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/mining"
 	"github.com/bytom/protocol"
 	"github.com/bytom/protocol/bc"
@@ -204,17 +206,66 @@ func (m *MiningPool) GetGbtWorkState() *GbtWorkState {
 	return m.gbtWorkState
 }
 
-func (ws *GbtWorkState) GetBlockTemplate() *mining.BlockTemplate {
+func (state *GbtWorkState) GetBlockTemplate() *mining.BlockTemplate {
 	// lock?
-	ws.RLock()
-	defer ws.RUnlock()
-	return ws.template
+	state.RLock()
+	defer state.RUnlock()
+	return state.template
 }
 
-// TODO
-func (ws *GbtWorkState) UpdateBlockTemplate(useCoinbaseValue bool) error {
-	// lock?
-	ws.Lock()
-	defer ws.Unlock()
+// This function MUST be called with the state locked.
+func (state *GbtWorkState) UpdateBlockTemplate(useCoinbaseValue bool) error {
 	return nil
+}
+
+type GbtResult struct {
+	Bits          uint64             `json:"bits"`
+	CurTime       uint64             `json:"curtime"`
+	Height        uint64             `json:"height"`
+	PreBlkHash    *bc.Hash           `json:"previousblockhash"`
+	MaxBlockGas   uint64             `json:"max_block_gas"`
+	Transactions  []*types.Tx        `json:"transactions"`
+	Version       uint64             `json:"version"`
+	CoinbaseAux   chainjson.HexBytes `json:"coinbaseaux,omitempty"`
+	CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
+	CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
+	Seed          *bc.Hash           `json:"seed"`
+	WorkID        uint64             `json:"workid,omitempty"` // TODO
+}
+
+// This function MUST be called with the state locked.
+func (state *GbtWorkState) BlockTemplateResult(useCoinbaseValue bool, submitOld *bool) (*GbtResult, error) {
+	template := state.GetBlockTemplate()
+	if template == nil {
+		return nil, errors.New("block template not ready yet.")
+	}
+
+	gbtResult := &GbtResult{
+		Bits:         template.Block.BlockHeader.Bits,
+		CurTime:      template.Block.BlockHeader.Timestamp,
+		Height:       template.Block.BlockHeader.Height,
+		PreBlkHash:   &template.Block.BlockHeader.PreviousBlockHash,
+		MaxBlockGas:  consensus.MaxBlockGas,
+		Transactions: template.Block.Transactions[1:], // TODO: descp for RPC result
+		Version:      template.Block.BlockHeader.Version,
+		CoinbaseAux:  []byte{},
+		// CoinbaseTxn   *types.Tx          `json:"coinbasetxn,omitempty"`   // TODO
+		// CoinbaseValue uint64             `json:"coinbasevalue,omitempty"` // TODO
+		Seed: template.Seed,
+		// TODO:
+		// WorkID
+		// WeightLimit:  blockchain.MaxBlockWeight,
+		// SigOpLimit:   blockchain.MaxBlockSigOpsCost,
+		// SizeLimit:    wire.MaxBlockPayload,
+		// LongPollID:   templateID,
+		// SubmitOld:    submitOld,
+		// Target:       targetDifficulty,
+		// MinTime:      state.minTimestamp.Unix(),
+		// MaxTime:      maxTime.Unix(),
+		// Mutable:      gbtMutableFields,
+		// NonceRange:   gbtNonceRange,
+		// Capabilities: gbtCapabilities,
+
+	}
+	return gbtResult, nil
 }
