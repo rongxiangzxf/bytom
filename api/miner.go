@@ -49,6 +49,19 @@ func (a *API) getBlockTemplate(ins *GbtReq) Response {
 }
 
 func (a *API) submitBlock(b *types.Block) Response {
+	// TODO
+	// Deserialize the submitted block.
+	// hexStr := c.HexBlock
+	// if len(hexStr)%2 != 0 {
+	// 	hexStr = "0" + c.HexBlock
+	// }
+	// serializedBlock, err := hex.DecodeString(hexStr)
+	// if err != nil {
+	// 	return nil, rpcDecodeHexError(hexStr)
+	// }
+
+	// block, err := btcutil.NewBlockFromBytes(serializedBlock)
+
 	err := a.miningPool.SubmitBlock(b)
 	if err != nil {
 		return NewErrorResponse(err)
