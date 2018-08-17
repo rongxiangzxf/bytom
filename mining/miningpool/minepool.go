@@ -228,6 +228,21 @@ func (state *GbtWorkState) BlockTemplateResult(useCoinbaseValue bool, submitOld 
 		return nil, errors.New("block template not ready yet.")
 	}
 
+	// TODO
+	// msgBlock := template.Block
+	// header := &msgBlock.Header
+	// adjustedTime := state.timeSource.AdjustedTime()
+	// maxTime := adjustedTime.Add(time.Second * blockchain.MaxTimeOffsetSeconds)
+	// if header.Timestamp.After(maxTime) {
+	// 	return nil, &btcjson.RPCError{
+	// 		Code: btcjson.ErrRPCOutOfRange,
+	// 		Message: fmt.Sprintf("The template time is after the "+
+	// 			"maximum allowed time for a block - template "+
+	// 			"time %v, maximum time %v", adjustedTime,
+	// 			maxTime),
+	// 	}
+	// }
+
 	gbtResult := &GbtResult{
 		Bits:         template.Block.BlockHeader.Bits,
 		CurTime:      template.Block.BlockHeader.Timestamp,
@@ -253,7 +268,47 @@ func (state *GbtWorkState) BlockTemplateResult(useCoinbaseValue bool, submitOld 
 		// Mutable:      gbtMutableFields,
 		// NonceRange:   gbtNonceRange,
 		// Capabilities: gbtCapabilities,
-
 	}
+
+	// TODO
+	// If the generated block template includes transactions with witness
+	// data, then include the witness commitment in the GBT result.
+	// if template.WitnessCommitment != nil {
+	// 	reply.DefaultWitnessCommitment = hex.EncodeToString(template.WitnessCommitment)
+	// }
+
+	if useCoinbaseValue {
+		// TODO
+		// gbtResult.CoinbaseAux = gbtCoinbaseAux
+		// reply.CoinbaseValue = &msgBlock.Transactions[0].TxOut[0].Value
+		gbtResult.CoinbaseValue = template.Block.Transactions[0].TxData.Outputs[0].OutputCommitment.AssetAmount.Amount
+	} else {
+		// Ensure the template has a valid payment address associated
+		// with it when a full coinbase is requested.
+		if !template.ValidPayAddress {
+			return nil, errors.New("A coinbase transaction has been requested, " +
+				"but the server has not been configured with any payment addresses.")
+		}
+
+		// TODO
+		// Serialize the transaction for conversion to hex.
+		// tx := msgBlock.Transactions[0]
+		// txBuf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
+		// if err := tx.Serialize(txBuf); err != nil {
+		// 	context := "Failed to serialize transaction"
+		// 	return nil, internalRPCError(err.Error(), context)
+		// }
+
+		// resultTx := btcjson.GetBlockTemplateResultTx{
+		// 	Data:    hex.EncodeToString(txBuf.Bytes()),
+		// 	Hash:    tx.TxHash().String(),
+		// 	Depends: []int64{},
+		// 	Fee:     template.Fees[0],
+		// 	SigOps:  template.SigOpCosts[0],
+		// }
+
+		gbtResult.CoinbaseTxn = template.Block.Transactions[0]
+	}
+
 	return gbtResult, nil
 }
