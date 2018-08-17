@@ -16,8 +16,11 @@ import (
 	"github.com/bytom/protocol/bc/types"
 	"github.com/bytom/protocol/state"
 	"github.com/bytom/protocol/validation"
+	// "github.com/bytom/protocol/vm"
 	"github.com/bytom/protocol/vm/vmutil"
 )
+
+var CoinbaseFlags = "/P2SH/bytomd/"
 
 // createCoinbaseTx returns a coinbase transaction paying an appropriate subsidy
 // based on the passed block height to the provided address.  When the address
@@ -36,6 +39,16 @@ func createCoinbaseTx(accountManager *account.Manager, amount uint64, blockHeigh
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO
+	// 	insts, err := vm.ParseProgram(script)
+	// 	for _, inst := range insts {
+	// 		log.Info(inst)
+	// 	}
+	// func (b *Builder) AddData(data []byte) *Builder {
+	// 	b.program = append(b.program, vm.PushdataBytes(data)...)
+	//  	return b
+	//  }
 
 	if len(arbitrary) > consensus.CoinbaseArbitrarySizeLimit {
 		return nil, validation.ErrCoinbaseArbitraryOversize

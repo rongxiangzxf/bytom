@@ -280,7 +280,6 @@ func (state *GbtWorkState) BlockTemplateResult(useCoinbaseValue bool, submitOld 
 	if useCoinbaseValue {
 		// TODO
 		// gbtResult.CoinbaseAux = gbtCoinbaseAux
-		// reply.CoinbaseValue = &msgBlock.Transactions[0].TxOut[0].Value
 		gbtResult.CoinbaseValue = template.Block.Transactions[0].TxData.Outputs[0].OutputCommitment.AssetAmount.Amount
 	} else {
 		// Ensure the template has a valid payment address associated
