@@ -276,11 +276,10 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	}
 
 	// Protect concurrent access when updating block templates.
-	state := a.miningPool.GetGbtWorkState()
+	state := a.miningPool.GbtWorkState
 	state.Lock()
 	defer state.Unlock()
 
-	// TODO
 	// Get and return a block template.  A new block template will be
 	// generated when the current best block has changed or the transactions
 	// in the memory pool have been updated and it has been at least five
@@ -298,7 +297,7 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	}
 }
 
+// TODO
 func (a *API) handleGbtProposal(ins *GbtReq) Response {
-	// TODO
 	return NewErrorResponse(errors.New("handleGbtProposal() not implemented yet."))
 }

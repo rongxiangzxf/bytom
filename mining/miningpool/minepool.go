@@ -34,7 +34,7 @@ type submitMsg struct {
 type MiningPool struct {
 	mutex        sync.RWMutex
 	block        *types.Block
-	gbtWorkState *GbtWorkState
+	GbtWorkState *GbtWorkState
 	submitCh     chan *submitMsg
 
 	chain          *protocol.Chain
@@ -97,7 +97,7 @@ func (m *MiningPool) generateBlock() {
 	}
 
 	now := time.Now()
-	m.gbtWorkState = &GbtWorkState{
+	m.GbtWorkState = &GbtWorkState{
 		lastTxUpdate:  now,
 		lastGenerated: now,
 		prevHash:      &template.Block.BlockHeader.PreviousBlockHash,
@@ -199,20 +199,7 @@ type GbtWorkState struct {
 	// timeSource    blockchain.MedianTimeSource
 }
 
-func (m *MiningPool) GetGbtWorkState() *GbtWorkState {
-	// lock?
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-	return m.gbtWorkState
-}
-
-func (state *GbtWorkState) GetBlockTemplate() *mining.BlockTemplate {
-	// lock?
-	state.RLock()
-	defer state.RUnlock()
-	return state.template
-}
-
+// TODO
 // This function MUST be called with the state locked.
 func (state *GbtWorkState) UpdateBlockTemplate(useCoinbaseValue bool) error {
 	return nil
@@ -235,7 +222,7 @@ type GbtResult struct {
 
 // This function MUST be called with the state locked.
 func (state *GbtWorkState) BlockTemplateResult(useCoinbaseValue bool, submitOld *bool) (*GbtResult, error) {
-	template := state.GetBlockTemplate()
+	template := state.template
 	if template == nil {
 		return nil, errors.New("block template not ready yet.")
 	}
