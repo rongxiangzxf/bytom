@@ -28,13 +28,11 @@ type submitMsg struct {
 	reply chan error
 }
 
-// MiningPool is the support struct for p2p mine pool
+// MiningPool is the support struct for p2p mining pool
 type MiningPool struct {
-	mutex        sync.RWMutex
-	block        *types.Block
-	gbtWorkState *GbtWorkState
-	submitCh     chan *submitMsg
-
+	mutex          sync.RWMutex
+	template       *mining.BlockTemplate
+	submitCh       chan *submitMsg
 	chain          *protocol.Chain
 	accountManager *account.Manager
 	txPool         *protocol.TxPool
@@ -60,7 +58,7 @@ func (m *MiningPool) blockUpdater() {
 	for {
 		select {
 		case <-ticker.C:
-			m.generateBlock()
+			m.generateTemplate()
 
 		case submitMsg := <-m.submitCh:
 			var err error
@@ -72,19 +70,19 @@ func (m *MiningPool) blockUpdater() {
 				err = errors.New("miningpool: submitMsg error")
 			}
 			if err == nil {
-				m.generateBlock()
+				m.generateTemplate()
 			}
 			submitMsg.reply <- err
 		}
 	}
 }
 
-// generateBlock generates a block template to mine
-func (m *MiningPool) generateBlock() {
+// generateTemplate generates a block template to mine
+func (m *MiningPool) generateTemplate() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	if m.block != nil && *m.chain.BestBlockHash() == m.block.PreviousBlockHash {
-		m.block.Timestamp = uint64(time.Now().Unix())
+	if m.template != nil && *m.chain.BestBlockHash() == m.template.Block.PreviousBlockHash {
+		m.template.Block.Timestamp = uint64(time.Now().Unix())
 		return
 	}
 
@@ -93,23 +91,15 @@ func (m *MiningPool) generateBlock() {
 		log.Errorf("miningpool: failed on create new block template: %v", err)
 		return
 	}
-
-	now := time.Now()
-	m.gbtWorkState = &GbtWorkState{
-		lastTxUpdate:  now,
-		lastGenerated: now,
-		prevHash:      &template.Block.BlockHeader.PreviousBlockHash,
-		template:      template,
-	}
-	m.block = template.Block
+	m.template = template
 }
 
 // GetWork will return a block header for p2p mining
 func (m *MiningPool) GetWork() (*types.BlockHeader, error) {
-	if m.block != nil {
+	if m.template != nil {
 		m.mutex.RLock()
 		defer m.mutex.RUnlock()
-		bh := m.block.BlockHeader
+		bh := m.template.Block.BlockHeader
 		return &bh, nil
 	}
 	return nil, errors.New("no block is ready for mining")
@@ -141,13 +131,13 @@ func (m *MiningPool) submitWork(bh *types.BlockHeader) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	if m.block == nil || bh.PreviousBlockHash != m.block.PreviousBlockHash {
+	if m.template == nil || bh.PreviousBlockHash != m.template.Block.PreviousBlockHash {
 		return errors.New("pending mining block has been changed")
 	}
 
-	m.block.Nonce = bh.Nonce
-	m.block.Timestamp = bh.Timestamp
-	isOrphan, err := m.chain.ProcessBlock(m.block)
+	m.template.Block.Nonce = bh.Nonce
+	m.template.Block.Timestamp = bh.Timestamp
+	isOrphan, err := m.chain.ProcessBlock(m.template.Block)
 	if err != nil {
 		return err
 	}
@@ -164,8 +154,7 @@ func (m *MiningPool) submitBlock(b *types.Block) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	// TODO
-	if m.block == nil || b.PreviousBlockHash != m.block.PreviousBlockHash {
+	if m.template.Block == nil || b.PreviousBlockHash != m.template.Block.PreviousBlockHash {
 		return errors.New("pending mining block has been changed")
 	}
 
@@ -180,41 +169,5 @@ func (m *MiningPool) submitBlock(b *types.Block) error {
 	blockHash := b.BlockHeader.Hash()
 	m.newBlockCh <- &blockHash
 
-	return nil
-}
-
-// TODO
-// gbtWorkState houses state that is used in between multiple RPC invocations to
-// getblocktemplate.
-type GbtWorkState struct {
-	sync.RWMutex
-	lastTxUpdate  time.Time
-	lastGenerated time.Time
-	prevHash      *bc.Hash
-	minTimestamp  time.Time
-	template      *mining.BlockTemplate
-	// notifyMap     map[chainhash.Hash]map[int64]chan struct{}
-	// timeSource    blockchain.MedianTimeSource
-}
-
-func (m *MiningPool) GetGbtWorkState() *GbtWorkState {
-	// lock?
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-	return m.gbtWorkState
-}
-
-func (ws *GbtWorkState) GetBlockTemplate() *mining.BlockTemplate {
-	// lock?
-	ws.RLock()
-	defer ws.RUnlock()
-	return ws.template
-}
-
-// TODO
-func (ws *GbtWorkState) UpdateBlockTemplate(useCoinbaseValue bool) error {
-	// lock?
-	ws.Lock()
-	defer ws.Unlock()
 	return nil
 }

@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 
-	"github.com/bytom/consensus"
+	// "github.com/bytom/consensus"
 	chainjson "github.com/bytom/encoding/json"
 	"github.com/bytom/errors"
-	"github.com/bytom/mining/miningpool"
+	// "github.com/bytom/mining/miningpool"
 	"github.com/bytom/protocol/bc"
 	"github.com/bytom/protocol/bc/types"
 )
@@ -58,9 +58,9 @@ func (a *API) getBlockTemplate(ins *GbtReq) Response {
 
 	switch mode {
 	case "template":
-		return a.handleGbtRequest(ins)
+		// return a.handleGbtRequest(ins)
 	case "proposal":
-		return a.handleGbtProposal(ins)
+		// return a.handleGbtProposal(ins)
 	}
 	return NewErrorResponse(errors.New("Invalid mode."))
 }
@@ -245,6 +245,8 @@ func (a *API) stopMining() Response {
 	return NewSuccessResponse("")
 }
 
+/*
+
 func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	// Extract the relevant passed capabilities and restrict the result to
 	// either a coinbase value or a coinbase transaction object depending on
@@ -304,7 +306,7 @@ func (a *API) handleGbtRequest(ins *GbtReq) Response {
 	// seconds since the last template was generated.  Otherwise, the
 	// timestamp for the existing block template is updated (and possibly
 	// the difficulty on testnet per the consesus rules).
-	if err := state.UpdateBlockTemplate( /*s, */ useCoinbaseValue); err != nil {
+	if err := state.UpdateBlockTemplate(useCoinbaseValue); err != nil {
 		return NewErrorResponse(err)
 	}
 
@@ -351,3 +353,41 @@ func (a *API) handleGbtProposal(ins *GbtReq) Response {
 	// TODO
 	return NewErrorResponse(errors.New("handleGbtProposal() not implemented yet."))
 }
+
+// TODO
+// gbtWorkState houses state that is used in between multiple RPC invocations to
+// getblocktemplate.
+type GbtWorkState struct {
+	sync.RWMutex
+	lastTxUpdate  time.Time
+	lastGenerated time.Time
+	prevHash      *bc.Hash
+	minTimestamp  time.Time
+	template      *mining.BlockTemplate
+	// notifyMap     map[chainhash.Hash]map[int64]chan struct{}
+	// timeSource    blockchain.MedianTimeSource
+}
+
+func (m *MiningPool) GetGbtWorkState() *GbtWorkState {
+	// lock?
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	return m.gbtWorkState
+}
+
+func (ws *GbtWorkState) GetBlockTemplate() *mining.BlockTemplate {
+	// lock?
+	ws.RLock()
+	defer ws.RUnlock()
+	return ws.template
+}
+
+// TODO
+func (ws *GbtWorkState) UpdateBlockTemplate(useCoinbaseValue bool) error {
+	// lock?
+	ws.Lock()
+	defer ws.Unlock()
+	return nil
+}
+
+*/
