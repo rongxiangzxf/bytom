@@ -43,7 +43,7 @@ func (a *API) pseudohsmSignTemplates(ctx context.Context, x struct {
 	Password string             `json:"password"`
 	Txs      txbuilder.Template `json:"transaction"`
 }) Response {
-	if err := txbuilder.Sign(ctx, &x.Txs, x.Password, a.pseudohsmSignTemplate); err != nil {
+	if err := txbuilder.Sign(ctx, &x.Txs, x.Password, a.PseudohsmSignTemplate); err != nil {
 		log.WithField("build err", err).Error("fail on sign transaction.")
 		return NewErrorResponse(err)
 	}
@@ -51,7 +51,7 @@ func (a *API) pseudohsmSignTemplates(ctx context.Context, x struct {
 	return NewSuccessResponse(&signResp{Tx: &x.Txs, SignComplete: txbuilder.SignProgress(&x.Txs)})
 }
 
-func (a *API) pseudohsmSignTemplate(ctx context.Context, xpub chainkd.XPub, path [][]byte, data [32]byte, password string) ([]byte, error) {
+func (a *API) PseudohsmSignTemplate(ctx context.Context, xpub chainkd.XPub, path [][]byte, data [32]byte, password string) ([]byte, error) {
 	return a.wallet.Hsm.XSign(xpub, path, data[:], password)
 }
 
