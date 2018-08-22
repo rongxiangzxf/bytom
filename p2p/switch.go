@@ -389,13 +389,19 @@ func (sw *Switch) ensureOutboundPeers() {
 
 	var wg sync.WaitGroup
 	nodes := make([]*discover.Node, numToDial)
+
 	sw.discv.ReadRandomNodes(nodes)
+
 	for _, seed := range strings.Split(sw.Config.P2P.Seeds, ",") {
 		url := "enode://" + hex.EncodeToString(crypto.Sha256([]byte(seed))) + "@" + seed
 		nodes = append(nodes, discover.MustParseNode(url))
 	}
 
 	for i := 0; i < len(nodes); i++ {
+		if nodes[i] == nil {
+			continue
+		}
+
 		try := NewNetAddressIPPort(nodes[i].IP, nodes[i].TCP)
 		if sw.NodeInfo().ListenAddr == try.String() {
 			continue
@@ -410,6 +416,7 @@ func (sw *Switch) ensureOutboundPeers() {
 		wg.Add(1)
 		go sw.dialPeerWorker(try, &wg)
 	}
+
 	wg.Wait()
 }
 
